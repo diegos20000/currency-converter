@@ -14,47 +14,53 @@ const CurrencyConverter = () => {
             try {
             const response = await axios.get(`https://open.er-api.com/v6/latest/${fromCurrency}`);
             setCurrencies(response.data.rates);
-            calculateConversion(amount, response.data.rates[toCurrency]);
         } catch (error) {
             console.error("Error al obtener tasas de cambio:", error);
             }
         };
 
         fetchCurrencies();
-    }, [fromCurrency, toCurrency]);
+    }, [fromCurrency]);
+
+    useEffect(() => {
+        if (currencies[toCurrency]) {
+            calculateConversion(amount, currencies[toCurrency]);
+        }
+    }, [currencies, toCurrency, amount]);
 
     //calcular conversion
     const calculateConversion = (amountValue ,rate) => {
         if (!rate) return;
-        const Result = (amountValue * rate).toFixed(2);
-        setResult(Result);
+        const resultValue = (amountValue * rate).toFixed(2);
+        setResult(resultValue);
     };
 
     //cuando cambia el monto
     const handleAmountChange = (e) => {
-        const newAmount = parseFloat(e.target.value);
+        const newAmount = parseFloat(e.target.value) || 0;
         setAmount(newAmount);
-        calculateConversion(newAmount, currencies[toCurrency]);
     };
 
     //cuando cambia la moneda destino
     const handleToCurrencyChange = (e) => {
-        const newToCurrency = e.target.value;
-        setToCurrency(newToCurrency);
-        calculateConversion(amount, currencies[newToCurrency]);
+        setToCurrency(e.target.value);
     };
 
+    const handleFromCurrencyChange = (e) => {
+        setFromCurrency(e.target.value);
+    }
+
     const handleSwap = () => {
-        const temp = fromCurrency;
         setFromCurrency(toCurrency);
-        setToCurrency(temp);
+        setToCurrency(fromCurrency);
     };
 
     return (
-        <div>
+        <div className="container">
+            <div className="main">
             <h1>Calculadora de Conversión de Monedas</h1>
 
-            <div>
+            <div className="input-group">
                 <input 
                     type="number"
                     value={amount}
@@ -62,7 +68,7 @@ const CurrencyConverter = () => {
                     
                 />
 
-                <select value={fromCurrency} onChange={(e) => setFromCurrency(e.target.value)}>
+                <select value={fromCurrency} onChange={handleFromCurrencyChange}>
                     {Object.keys(currencies).map((currency) => (
                         <option key={currency} value={currency}>
                             {currency}
@@ -70,23 +76,23 @@ const CurrencyConverter = () => {
                     ))}
                 </select>
 
-                <span> a </span>
+                <span style={{ fontSize: "1.5rem", margin: "0 10px" }}>➡️</span>
 
                 <select value={toCurrency} onChange={handleToCurrencyChange}>
-                    {Object.keys(currencies).map((currency) => {
+                    {Object.keys(currencies).map((currency) => (
                         <option key={currency} value={currency}>
                             {currency}
                         </option>
-                    })}
+                    ))}
                 </select>
-                <div>
-                    <button onClick={handleSwap}>🔁 Intercambiar</button>
-                </div>
             </div>
 
+            <button onClick={handleSwap}>🔁 Intercambiar</button>
+                
             <div className="result">
-                    Resultado: {result} {toCurrency}
+                    Resultado: <strong>{result} {toCurrency}</strong>
             </div>
+        </div>
         </div>
     );
 };
